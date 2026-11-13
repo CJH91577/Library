@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.library.dao.EvaluationDao">
+    <insert id="addEvaluation" parameterType="com.library.bean.Evaluation">
+        insert into evaluation (book_id, reader_id, score, content)
+        values (#{book_id}, #{reader_id}, #{score}, #{content})
+        on duplicate key update score = #{score}, content = #{content}, create_time = sysdate()
+    </insert>
+    <select id="getEvaluationsByBookId" resultType="com.library.bean.Evaluation" parameterType="long">
+        select e.*, r.name as reader_name from evaluation e
+        join reader_info r on e.reader_id = r.reader_id
+        where e.book_id = #{book_id}
+        order by e.create_time desc
+    </select>
+    <select id="getEvaluationByReader" resultType="com.library.bean.Evaluation">
+        select * from evaluation where book_id = #{book_id} and reader_id = #{reader_id}
+    </select>
+    <select id="getAvgScore" resultType="double" parameterType="long">
+        select round(avg(score), 1) from evaluation where book_id = #{book_id}
+    </select>
+    <delete id="deleteEvaluation" parameterType="long">
+        delete from evaluation where eval_id = #{eval_id}
+    </delete>
+    <select id="hasReturnedLend" resultType="int">
+        select count(*) from lend_list
+        where book_id = #{book_id} and reader_id = #{reader_id} and back_date is not null
+    </select>
+    <select id="getAllEvaluations" resultType="com.library.bean.Evaluation" parameterType="String">
+        select e.*, r.name as reader_name, b.name as book_name from evaluation e
+        join reader_info r on e.reader_id = r.reader_id
+        join book_info b on e.book_id = b.book_id
+        where b.name like #{search} or r.name like #{search} or e.content like #{search}
+        order by e.create_time desc
+    </select>
+    <update id="replyEvaluation">
+        update evaluation set reply = #{reply}, reply_time = sysdate() where eval_id = #{eval_id}
+    </update>
+</mapper>
